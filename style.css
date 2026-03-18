@@ -1,0 +1,16 @@
+/* ------------------- Core Search Component Interface ------------------- */
+
+/* Body */
+body {
+  color: #f1f1f1;
+  font-family: "Segoe UI", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Search Component Wrapper */
+.search-component {
+  text-align: center;
+  padding: 40px 20px 10px 20px;
+}
+
