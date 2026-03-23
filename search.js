@@ -2,11 +2,13 @@
 const apiKey = "7da1f0bba32cd7bff0a0449e99ebecea";
 let debounceTimer = null;
 const cache = new Map();
-let selectedIndex = -1;
+
+//Inialize AbortController to handle cancellation of previous fetch requests
+let currentController = null;
 
 //Added event listener to handle input and display results
-const inputEl = document.querySelector("#searchInput");
-const resultsEl = document.querySelector("#results");
+const inputEl = document.querySelector(".search-input");
+const resultsEl = document.querySelector(".search-results");
 
 //Function that includes debounce, map cache and fetch
 function handleInput(e) {
@@ -16,7 +18,7 @@ function handleInput(e) {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
     if (!query) {
-      this.renderResults([]);
+      renderResults([]);
       return;
     }
     //Map cache to save results and prevent unnecessary API calls
@@ -28,22 +30,22 @@ function handleInput(e) {
 
     //Fetch results from TMDB API using my API key
     fetch(
-      `https://api.themoviedb.org/3/search/movie?api_key=${this.apiKey}&query=${encodeURIComponent(query)}`,
+      `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${encodeURIComponent(query)}`,
       { signal },
     )
       .then((res) => res.json())
       .then((data) => {
         const results = data.results || [];
-        this.cache.set(query, results);
-        this.renderResults(results, query);
+        cache.set(query, results);
+        renderResults(results, query);
       })
       .catch((err) => {
         if (err.name === "AbortError")
           console.log("Previous request cancelled");
         else console.error(err);
-        this.renderResults([]);
+        renderResults([]);
       })
-      .finally(() => (this.resultsEl.dataset.loading = "false"));
+      .finally(() => (resultsEl.dataset.loading = "false"));
   }, 300);
 }
 
@@ -56,7 +58,11 @@ function renderResults(results, query = "") {
 
   results.forEach((movie) => {
     const div = document.createElement("div");
+    div.textContent = movie.title;
     frag.appendChild(div);
   });
   resultsEl.appendChild(frag);
 }
+
+//Event listener to handle input and call the handleInput function
+inputEl.addEventListener("input", handleInput);
