@@ -31,3 +31,28 @@ input {
   font-weight: bold;
   padding: 5px;
 }
+
+/*Detail Panel */
+.hidden { display: none; }
+#detailPanel {
+  margin-top: 20px;
+  background: #222;
+  padding: 15px;
+  border-radius: 6px;
+}
+#detailPanel h2, #detailPanel h3 {
+  margin: 5px 0;
+}
+#detailPanel ul {
+  list-style: none;
+  padding-left: 0;
+}
+#detailPanel a {
+  display: block;
+  color: #0af;
+  text-decoration: none;
+  margin-bottom: 4px;
+}
+#detailPanel a:hover {
+  text-decoration: underline;
+}
