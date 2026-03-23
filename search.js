@@ -13,18 +13,18 @@ function handleInput(e) {
   const query = e.target.value.trim();
 
   //Debounce timer to prevent excessive API calls
-  clearTimeout(this.debounceTimer);
-  this.debounceTimer = setTimeout(() => {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
     if (!query) {
       this.renderResults([]);
       return;
     }
     //Map cache to save results and prevent unnecessary API calls
-    if (this.cache.has(query)) {
-      this.renderResults(this.cache.get(query), query);
+    if (cache.has(query)) {
+      renderResults(cache.get(query), query);
       return;
     }
-    this.resultsEl.dataset.loading = "true";
+    resultsEl.dataset.loading = "true";
 
     //Fetch results from TMDB API using my API key
     fetch(
