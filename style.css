@@ -32,6 +32,19 @@ input {
   padding: 5px;
 }
 
+/*Highlighted text */
+.highlight {
+  background: yellow;
+  color: black;
+  font-weight: bold;
+}
+
+/*Active keyboard navigation */
+.active {
+  background: gold;
+  color: black;
+}
+
 /*Detail Panel */
 .hidden { display: none; }
 #detailPanel {
@@ -55,4 +68,9 @@ input {
 }
 #detailPanel a:hover {
   text-decoration: underline;
+}
+
+.result-item.active {
+  background-color: #007BFF; 
+  color: white;
 }

@@ -2,6 +2,7 @@
 const apiKey = "7da1f0bba32cd7bff0a0449e99ebecea";
 let debounceTimer = null;
 const cache = new Map();
+let selectedIndex = -1;
 
 //Inialize AbortController to handle cancellation of previous fetch requests
 let currentController = null;
@@ -64,9 +65,15 @@ function renderResults(results, query = "") {
 
   results.forEach((movie) => {
     const div = document.createElement("div");
-    div.textContent = movie.title;
+    div.className = "result-item";
+
+    //Use the XSS-safe highlight builder
+    const highlightedTitle = buildHighlightedTitle(movie.title, query);
+
+    div.appendChild(highlightedTitle);
     //Load movie details on click
     div.addEventListener("click", () => loadMovie(movie.id));
+
     frag.appendChild(div);
   });
   resultsEl.appendChild(frag);
@@ -85,8 +92,8 @@ const detailVideos = document.querySelector("#detailVideos");
 //Function to load movie details, cast and videos when a result is clicked
 function loadMovie(id) {
   detailPanel.classList.remove("hidden");
-  
-  //Fetch movie details, cast and videos using promise.allSettled to handle multiple fetch requests and display results 
+
+  //Fetch movie details, cast and videos using promise.allSettled to handle multiple fetch requests and display results
   Promise.allSettled([
     fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}`).then(
       (r) => r.json(),
@@ -98,38 +105,44 @@ function loadMovie(id) {
       `https://api.themoviedb.org/3/movie/${id}/videos?api_key=${apiKey}`,
     ).then((r) => r.json()),
   ]).then(([details, credits, videos]) => {
-    
     // Movie details
-     if (details.status === "fulfilled") {
+    if (details.status === "fulfilled") {
       detailTitle.textContent = details.value.title;
-      detailOverview.textContent = details.value.overview || "No overview available.";
+      detailOverview.textContent =
+        details.value.overview || "No overview available.";
     } else {
       detailTitle.textContent = "Failed to load movie details";
       detailOverview.textContent = "";
       console.warn("Details failed to load:", details.reason);
     }
 
-
     // Cast details
-detailCast.innerHTML = ""; // Clear previous content
-if (credits.status === "fulfilled" && credits.value && Array.isArray(credits.value.cast)) {
-  credits.value.cast.slice(0, 5).forEach(actor => {
-    const li = document.createElement("li");
-    li.textContent = actor.name;
-    detailCast.appendChild(li);
-  });
-} else {
-  // Placeholder for failed fetch
-  const li = document.createElement("li");
-  li.textContent = "Failed to load cast";
-  detailCast.appendChild(li);
-  console.warn("Credits failed to load or cast data missing:", credits.reason);
-}
+    detailCast.innerHTML = ""; // Clear previous content
+    if (
+      credits.status === "fulfilled" &&
+      credits.value &&
+      Array.isArray(credits.value.cast)
+    ) {
+      credits.value.cast.slice(0, 5).forEach((actor) => {
+        const li = document.createElement("li");
+        li.textContent = actor.name;
+        detailCast.appendChild(li);
+      });
+    } else {
+      // Placeholder for failed fetch
+      const li = document.createElement("li");
+      li.textContent = "Failed to load cast";
+      detailCast.appendChild(li);
+      console.warn(
+        "Credits failed to load or cast data missing:",
+        credits.reason,
+      );
+    }
 
     // Videos details
-   detailVideos.innerHTML = ""; // Clear previous content
+    detailVideos.innerHTML = ""; // Clear previous content
     if (videos.status === "fulfilled") {
-      videos.value.results.slice(0, 2).forEach(video => {
+      videos.value.results.slice(0, 2).forEach((video) => {
         const a = document.createElement("a");
         a.href = `https://youtube.com/watch?v=${video.key}`;
         a.textContent = "Watch Trailer";
@@ -146,3 +159,45 @@ if (credits.status === "fulfilled" && credits.value && Array.isArray(credits.val
     }
   });
 }
+
+//Function to build highlighted title for search results
+function buildHighlightedTitle(title, query) {
+  const container = document.createElement("span");
+  const idx = title.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) {
+    container.textContent = title;
+    return container;
+  }
+
+  const before = document.createTextNode(title.slice(0, idx));
+  const match = document.createElement("span");
+  match.className = "highlight";
+  match.textContent = title.slice(idx, idx + query.length);
+  const after = document.createTextNode(title.slice(idx + query.length));
+
+  container.appendChild(before);
+  container.appendChild(match);
+  container.appendChild(after);
+
+  return container;
+}
+
+//Function to handle keyboard navigation in search results
+function handleKeyboard(e) {
+  const items = resultsEl.querySelectorAll("div");
+  if (items.length === 0) return;
+
+  if (e.key === "ArrowDown") selectedIndex = (selectedIndex + 1) % items.length;
+  if (e.key === "ArrowUp")
+    selectedIndex = (selectedIndex - 1 + items.length) % items.length;
+  if (e.key === "Enter" && items[selectedIndex]) items[selectedIndex].click();
+
+  items.forEach((el) => el.classList.remove("active"));
+  if (items[selectedIndex]) {
+    items[selectedIndex].classList.add("active");
+    items[selectedIndex].scrollIntoView({ block: "nearest" });
+  }
+}
+
+//Event listener to handle keyboard navigation in search results
+inputEl.addEventListener("keydown", handleKeyboard);
