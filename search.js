@@ -62,20 +62,26 @@ function renderResults(results, query = "") {
   selectedIndex = -1;
 
   const frag = document.createDocumentFragment();
+  const template = document.querySelector("#resultTemplate");
 
   results.forEach((movie) => {
-    const div = document.createElement("div");
-    div.className = "result-item";
+    
+    // Clone template 
+    const clone = template.content.cloneNode(true);
+    const div = clone.querySelector(".result-item");
 
-    //Use the XSS-safe highlight builder
+      //Use the XSS-safe highlight builder
     const highlightedTitle = buildHighlightedTitle(movie.title, query);
-
     div.appendChild(highlightedTitle);
+
     //Load movie details on click
     div.addEventListener("click", () => loadMovie(movie.id));
 
-    frag.appendChild(div);
+    // Add to fragment
+    frag.appendChild(clone);
   });
+
+  // ONE DOM write
   resultsEl.appendChild(frag);
 }
 
